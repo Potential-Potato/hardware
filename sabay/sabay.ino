@@ -24,7 +24,7 @@ long duration;
 float distanceToGround; // Distance measured by the sensor
 float height;           // Person's height
 
-const float sensorHeight = 200.0; // Height of sensor in cm (example: 200 cm = 6'6")
+const float sensorHeight = 205.36; // Height of sensor in cm (example: 200 cm = 6'6")
 
 void setup() {
 
