@@ -23,44 +23,55 @@ let heights = [];
 parser.on("data", async (data) => {
   console.log("Received from Arduino:", data);
 
-  const weightMatch = data.match(/Weight: ([\d.]+)/);
-  const heightMatch = data.match(/Height of person: ([\d.]+)/);
+  if (data.includes("This is running")) {
+    console.log("Arduino is running, but no button press detected.");
+  } else {
+    const weightMatch = data.match(/Weight: ([\d.]+)/);
+    const heightMatch = data.match(/Height of person: ([\d.]+)/);
 
-  if (weightMatch) {
-    const weight = parseFloat(weightMatch[1]);
-    weights.push(weight);
-  }
-  if (heightMatch) {
-    const height = parseFloat(heightMatch[1]);
-    heights.push(height);
-  }
-
-  // Calculate and print average when 3 sets of data are received
-  if (weights.length === 3 && heights.length === 3) {
-    const averageWeight = weights.reduce((a, b) => a + b, 0) / weights.length;
-    const averageHeight = heights.reduce((a, b) => a + b, 0) / heights.length;
-
-    // Format to 2 decimal places
-    const formattedAverageWeight = averageWeight.toFixed(2);
-    const formattedAverageHeight = averageHeight.toFixed(2);
-
-    console.log("Average Weight:", formattedAverageWeight, "kg");
-    console.log("Average Height:", formattedAverageHeight, "cm");
-    // Create and save a new document
-    try {
-      const bmiRecord = new bmi({
-        weight: formattedAverageWeight,
-        height: formattedAverageHeight,
-      });
-      await bmiRecord.save();
-      console.log("Average data saved to MongoDB:", bmiRecord);
-    } catch (error) {
-      console.error("Error saving data to MongoDB:", error);
+    if (weightMatch) {
+      const weight = parseFloat(weightMatch[1]);
+      weights.push(weight);
+    }
+    if (heightMatch) {
+      const height = parseFloat(heightMatch[1]);
+      heights.push(height);
     }
 
-    // Reset arrays for the next set of data
-    weights = [];
-    heights = [];
+    // Calculate and print average when 3 sets of data are received
+    if (weights.length === 3 && heights.length === 3) {
+      const averageWeight = weights.reduce((a, b) => a + b, 0) / weights.length;
+      const averageHeight = heights.reduce((a, b) => a + b, 0) / heights.length;
+
+      // Format to 2 decimal places
+      const formattedAverageWeight = averageWeight.toFixed(2);
+      const formattedAverageHeight = averageHeight.toFixed(2);
+
+      console.log("Average Weight:", formattedAverageWeight, "kg");
+      console.log("Average Height:", formattedAverageHeight, "cm");
+
+      // Calculate BMI (assuming weight is in kg and height is in cm)
+      const bmi = (averageWeight / (averageHeight / 100) ** 2).toFixed(2);
+
+      console.log("BMI:", bmi);
+
+      // Create and save a new document
+      try {
+        const bmiRecord = new bmi({
+          weight: formattedAverageWeight,
+          height: formattedAverageHeight,
+          bmi: bmi,
+        });
+        await bmiRecord.save();
+        console.log("Average data saved to MongoDB:", bmiRecord);
+      } catch (error) {
+        console.error("Error saving data to MongoDB:", error);
+      }
+
+      // Reset arrays for the next set of data
+      weights = [];
+      heights = [];
+    }
   }
 });
 
